@@ -1,0 +1,6 @@
+# V2 data subdirectory — reserved for future typed-fixture
+# modules that map the imported owner evidence pack into the
+# V2 spine. Currently empty by design.
+#
+# See docs/architecture/v2_tooling_architecture.md §1.2 and
+# docs/architecture/v2_backend_readiness_plan.md.

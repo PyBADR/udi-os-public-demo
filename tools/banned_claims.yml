@@ -1,0 +1,377 @@
+# Banned claims policy — language guardrails for the Urban Municipal
+# Intelligence Platform. Every entry is a regex, case-insensitive.
+# Add `whole_word: true` if the term should not match inside another word.
+# `suggested` is shown to authors when the linter fires.
+
+banned:
+  - phrase: "live satellite"
+    suggested: "satellite snapshot"
+    why: "Implies a real-time feed we do not have."
+
+  - phrase: "real[- ]time satellite"
+    suggested: "satellite snapshot"
+    why: "Implies a real-time feed we do not have."
+
+  - phrase: "in real time"
+    suggested: "as of <capture date>"
+    why: "We do not operate on real-time data."
+
+  - phrase: "ai[- ]confirmed violation"
+    suggested: "suspected indicator pending review"
+    why: "Models do not adjudicate violations."
+
+  - phrase: "ai[- ]confirmed"
+    suggested: "model-flagged"
+    why: "Reserve 'confirmed' for human-validated outcomes."
+
+  - phrase: "verified violation"
+    suggested: "suspected violation pending review"
+    why: "No automated verification of violations."
+
+  - phrase: "violation confirmed"
+    suggested: "suspected indicator pending review"
+    why: "No automated confirmation."
+
+  - phrase: "official evidence"
+    suggested: "preliminary observation"
+    why: "Evidence is officer-validated, not system-generated."
+
+  - phrase: "automatic penalty"
+    suggested: "review recommended"
+    why: "We never trigger penalties automatically."
+
+  - phrase: "automated fine"
+    suggested: "review recommended"
+    why: "We never trigger fines automatically."
+
+  - phrase: "automatic enforcement"
+    suggested: "review recommended"
+    why: "We never enforce automatically."
+
+  - phrase: "guaranteed"
+    suggested: "consistent with"
+    why: "Avoid overclaim language."
+
+  - phrase: "100% confidence"
+    suggested: "high credibility (see breakdown)"
+    why: "Avoid overclaim language."
+
+  - phrase: "we caught"
+    suggested: "the system flagged"
+    why: "Avoid adversarial framing."
+
+  - phrase: "caught violator"
+    suggested: "flagged parcel"
+    why: "Avoid adversarial framing."
+
+  # ---------------------------------------------------------------------
+  # DAL forbidden affordances (Phase 31C-S0). Per badge brief §4.2 / §5.4
+  # and CLAUDE.md §11. Word-bounded so identifier names like
+  # `urgent_case_ids` or `enforcement_score` do not falsely trip — the
+  # policy targets user-facing copy, not Python field names.
+  #
+  # Phase 32.5.1 R-CI fix: also exclude negation contexts so the
+  # constitutional negated boundaries the product is REQUIRED to display
+  # ("No enforcement", "Not enforcement", "anti-enforcement") do not
+  # falsely trip. The standalone positive claim ("enforcement", "We will
+  # enforce X") is unchanged. Each negative lookbehind is fixed-width
+  # (Python `re` requirement). Lookbehinds chain as AND.
+  # ---------------------------------------------------------------------
+
+  - phrase: "(?<![a-zA-Z_.])(?<!No\s)(?<!no\s)(?<!Not\s)(?<!not\s)(?<!anti-)enforcement(?![a-zA-Z_.])"
+    suggested: "recommended next step"
+    why: "DAL is advisory-only; no enforcement authority. (Negated boundaries 'No/Not/anti- enforcement' are explicitly allowed.)"
+
+  - phrase: "(?<![a-zA-Z_.])(?<!No\s)(?<!no\s)(?<!Not\s)(?<!not\s)(?<!anti-)enforce(?![a-zA-Z_.])"
+    suggested: "review"
+    why: "DAL never enforces. (Negated boundaries 'No/Not/anti- enforce' are explicitly allowed.)"
+
+  - phrase: "automatic\s+escalation"
+    suggested: "reviewer-initiated escalation"
+    why: "Escalation is reviewer-driven, never automatic."
+
+  - phrase: "auto[- ]escalate"
+    suggested: "reviewer-initiated escalation"
+    why: "Escalation is reviewer-driven, never automatic."
+
+  - phrase: "confirmed\s+violation"
+    suggested: "observed pattern under review"
+    why: "Models and projections never confirm violations."
+
+  - phrase: "(?<![a-zA-Z_.])urgent(?![a-zA-Z_.])"
+    suggested: "warrants accelerated review"
+    why: "Avoids urgency-as-obligation framing per badge brief §0."
+
+  - phrase: "(?<![a-zA-Z_.])emergency(?![a-zA-Z_.])"
+    suggested: "warrants immediate reviewer attention"
+    why: "No emergency framing on advisory surfaces."
+
+  - phrase: "(?<![a-zA-Z_.])alarm(?![a-zA-Z_.])"
+    suggested: "activation signal"
+    why: "DAL surfaces are not alarms."
+
+  - phrase: "red[- ]flag"
+    suggested: "activation signal"
+    why: "Removes alarm/severity coupling."
+
+  - phrase: "(?<![a-zA-Z_.])alert(?![a-zA-Z_.])"
+    suggested: "signal"
+    why: "Reserve neutral 'signal' over alarm-coded 'alert'."
+
+  - phrase: "must[- ]act"
+    suggested: "reviewer may consider"
+    why: "DAL never directs imperative action."
+
+  - phrase: "you\s+must"
+    suggested: "consider"
+    why: "DAL never directs imperative action."
+
+  - phrase: "do\s+not\s+delay"
+    suggested: "review when convenient within window"
+    why: "No countdown-style pressure."
+
+  - phrase: "final\s+notice"
+    suggested: "review window closing"
+    why: "No legal-notice framing."
+
+  # Arabic banned equivalents (badge brief §5.4 — explicit AR coverage so
+  # paraphrase cannot bypass the EN check). Authored, not machine-translated.
+
+  - phrase: "طوارئ"
+    suggested: "تستدعي انتباه المراجع الفوري"
+    why: "AR equivalent of 'emergency'."
+
+  - phrase: "إلزامي"
+    suggested: "موصى به"
+    why: "AR equivalent of 'mandatory'."
+
+  - phrase: "مهلة\s+نهائية"
+    suggested: "نافذة المراجعة"
+    why: "AR equivalent of 'final deadline'."
+
+  - phrase: "مخالفة\s+مؤكدة"
+    suggested: "نمط مرصود قيد المراجعة"
+    why: "AR equivalent of 'confirmed violation'."
+
+  - phrase: "احتيال"
+    suggested: "إشارة قيد المراجعة"
+    why: "AR equivalent of 'fraud'."
+
+  - phrase: "(?<![ا-ي])مخالف(?![ا-ي])"
+    suggested: "حالة قيد المراجعة"
+    why: "AR equivalent of 'violator'."
+
+  - phrase: "يجب\s+فور"
+    suggested: "يُقترح"
+    why: "AR equivalent of 'must immediately'."
+
+  - phrase: "لا\s+تتأخر"
+    suggested: "ضمن نافذة المراجعة"
+    why: "AR equivalent of 'do not delay'."
+
+  # ---------------------------------------------------------------------
+  # OID forbidden monetization / ROI / progress-to-target framing
+  # (Phase OID-P1; design §4 #2-#3 + §8). The DecisionBasisBlock
+  # describes basis, not ambition — no ROI, no currency, no "% to goal",
+  # no improvement/regression coloring, no savings claims. Word-bounded
+  # so identifier names like `kwd_total_field` still pass.
+  # ---------------------------------------------------------------------
+
+  - phrase: "(?<![a-zA-Z_.])ROI(?![a-zA-Z_.])"
+    suggested: "outcome basis"
+    why: "DecisionBasisBlock describes basis, not return on investment."
+
+  - phrase: "return\s+on\s+investment"
+    suggested: "outcome basis"
+    why: "DecisionBasisBlock describes basis, not return on investment."
+
+  # Currency codes require numeric adjacency to avoid collision with legit
+  # technical acronyms (e.g. SAR = Synthetic Aperture Radar in remote
+  # sensing). Match shapes like "1200 KWD", "KWD 1,200", "$3.5K SAR".
+  - phrase: "(?:[0-9][0-9,.]*\s*KWD|KWD\s*[0-9])"
+    suggested: "(no currency framing)"
+    why: "No monetary amounts in advisory surfaces."
+
+  - phrase: "(?:[0-9][0-9,.]*\s*SAR|SAR\s*[0-9])"
+    suggested: "(no currency framing)"
+    why: "No monetary amounts in advisory surfaces."
+
+  - phrase: "(?:[0-9][0-9,.]*\s*AED|AED\s*[0-9])"
+    suggested: "(no currency framing)"
+    why: "No monetary amounts in advisory surfaces."
+
+  - phrase: "saved\s+hours"
+    suggested: "(no productivity framing)"
+    why: "No savings/productivity claims on advisory surfaces."
+
+  - phrase: "saved\s+cost"
+    suggested: "(no cost framing)"
+    why: "No savings/cost claims on advisory surfaces."
+
+  - phrase: "cost\s+saved"
+    suggested: "(no cost framing)"
+    why: "No savings/cost claims on advisory surfaces."
+
+  - phrase: "monetization"
+    suggested: "(no monetization framing)"
+    why: "No monetization framing on advisory surfaces."
+
+  - phrase: "progress\s+to\s+(?:goal|target)"
+    suggested: "(no ambition framing)"
+    why: "DecisionBasisBlock describes basis, not progress to goal."
+
+  - phrase: "%\s+to\s+(?:goal|target)"
+    suggested: "(no ambition framing)"
+    why: "DecisionBasisBlock describes basis, not progress to goal."
+
+  # AR equivalents (authored, not machine-translated).
+  - phrase: "العائد\s+على\s+الاستثمار"
+    suggested: "أساس النتيجة"
+    why: "AR equivalent of 'return on investment'."
+
+  - phrase: "(?<![ا-ي])توفير(?![ا-ي])"
+    suggested: "(no savings framing)"
+    why: "AR equivalent of 'savings'."
+
+  # ---------------------------------------------------------------------
+  # P5 Municipal Outcome Layer — financial / enforcement framing
+  # (Phase P5.0). The Municipal Financial Outcome Layer projects bounded
+  # exposure bands and operational value drivers downstream of Decision
+  # Basis. It never produces currency, ROI, savings claims, profit
+  # guarantees, automatic penalties, or enforcement framing. Every
+  # projection carries caveats and links back to Decision Basis.
+  # See docs/architecture/p5_municipal_outcome_execution_memo.md.
+  # Patterns are word-bounded where identifier-name collision is plausible
+  # (e.g. `fine_grained`, `define`, `penalty_score_field`). Whitespace
+  # tokens use \s+ so paraphrase via NBSP / extra space cannot bypass.
+  # AR entries authored, not machine-translated.
+  # ---------------------------------------------------------------------
+
+  # --- EN: guarantee / ROI / savings / loss-reduction framing ----------
+
+  - phrase: "guaranteed\s+ROI"
+    suggested: "outcome basis (bounded, non-guaranteed)"
+    why: "P5 never guarantees return; outputs are exposure bands, not yields."
+
+  - phrase: "guaranteed\s+loss\s+reduction"
+    suggested: "projected exposure-band shift (caveated)"
+    why: "P5 never guarantees reduction; projections are conditional on Decision Basis."
+
+  - phrase: "profit\s+guarantee"
+    suggested: "(no profit framing on advisory surfaces)"
+    why: "P5 is a municipal projection layer, not a financial product."
+
+  - phrase: "savings\s+guarantee"
+    suggested: "(no savings framing on advisory surfaces)"
+    why: "P5 never asserts savings; bounded operational counts only."
+
+  - phrase: "confirmed\s+savings"
+    suggested: "(no savings framing on advisory surfaces)"
+    why: "Savings cannot be confirmed in MVP; calibration gate (P6) required."
+
+  - phrase: "exact\s+currency\s+impact"
+    suggested: "exposure band (Low / Medium / High / Critical / Insufficient Basis)"
+    why: "P5 MVP forbids precise currency in projections."
+
+  # --- EN: enforcement / penalty / fine framing ------------------------
+
+  - phrase: "automatic\s+fine"
+    suggested: "review recommended"
+    why: "P5 never triggers fines automatically; HITL gate is mandatory."
+
+  - phrase: "enforcement\s+action"
+    suggested: "recommended next step (HITL-gated)"
+    why: "P5 surfaces signals, never enforcement actions."
+
+  - phrase: "enforcement\s+required"
+    suggested: "review recommended"
+    why: "P5 never asserts enforcement requirements; municipal review is sole authority."
+
+  - phrase: "(?<![a-zA-Z_.])penalty\s+recommended(?![a-zA-Z_.])"
+    suggested: "review recommended"
+    why: "P5 never recommends penalties; outputs are exposure indicators."
+
+  - phrase: "(?<![a-zA-Z_.])fine\s+issued(?![a-zA-Z_.])"
+    suggested: "(no fine framing — review recommended)"
+    why: "P5 never issues fines or describes them as system output."
+
+  # --- EN: confirmation framing ----------------------------------------
+
+  - phrase: "confirmed\s+breach"
+    suggested: "observed pattern under review"
+    why: "P5 never confirms breach; basis-conditional exposure indicators only."
+
+  - phrase: "non[- ]?compliant\s+confirmed"
+    suggested: "exposure indicated; review recommended"
+    why: "Compliance status is a municipal-review outcome, not a P5 projection."
+
+  # --- EN: currency-shape coverage extension (USD / EUR / GBP) ---------
+  # Mirrors the existing KWD/SAR/AED rules; numeric adjacency required so
+  # legitimate technical acronyms / non-currency uses are not tripped.
+
+  - phrase: "(?:[0-9][0-9,.]*\s*USD|USD\s*[0-9])"
+    suggested: "(no currency framing — exposure band only)"
+    why: "No monetary amounts in advisory surfaces."
+
+  - phrase: "(?:[0-9][0-9,.]*\s*EUR|EUR\s*[0-9])"
+    suggested: "(no currency framing — exposure band only)"
+    why: "No monetary amounts in advisory surfaces."
+
+  - phrase: "(?:[0-9][0-9,.]*\s*GBP|GBP\s*[0-9])"
+    suggested: "(no currency framing — exposure band only)"
+    why: "No monetary amounts in advisory surfaces."
+
+  # --- AR: guarantee / ROI / savings / loss-reduction framing ----------
+  # Authored Gulf institutional Arabic; never machine-translated.
+
+  - phrase: "عائد\s+مضمون"
+    suggested: "أساس النتيجة (مقيّد، غير مضمون)"
+    why: "AR equivalent of 'guaranteed return'."
+
+  - phrase: "توفير\s+مؤكد"
+    suggested: "(لا تأطير على شكل توفير)"
+    why: "AR equivalent of 'confirmed savings'."
+
+  - phrase: "(?<![ا-ي])وفّرنا(?![ا-ي])"
+    suggested: "(لا ادعاء توفير — يُكتفى بنطاقات الأثر)"
+    why: "AR first-person savings claim; banned on advisory surfaces."
+
+  - phrase: "(?<![ا-ي])وفرنا(?![ا-ي])"
+    suggested: "(لا ادعاء توفير — يُكتفى بنطاقات الأثر)"
+    why: "AR first-person savings claim (un-shadda variant); banned on advisory surfaces."
+
+  - phrase: "خسارة\s+مؤكدة"
+    suggested: "نمط أثر تشغيلي قيد المراجعة"
+    why: "AR equivalent of 'confirmed loss'."
+
+  # --- AR: penalty / fine / enforcement framing ------------------------
+
+  - phrase: "غرامة\s+تلقائية"
+    suggested: "يوصى بالمراجعة"
+    why: "AR equivalent of 'automatic fine'."
+
+  - phrase: "عقوبة\s+تلقائية"
+    suggested: "يوصى بالمراجعة"
+    why: "AR equivalent of 'automatic penalty'."
+
+  - phrase: "تنفيذ\s+تلقائي"
+    suggested: "يوصى بالمراجعة"
+    why: "AR equivalent of 'automatic execution / enforcement'."
+
+  - phrase: "إصدار\s+غرامة"
+    suggested: "يوصى بالمراجعة"
+    why: "AR equivalent of 'fine issued'."
+
+  - phrase: "إجراء\s+تنفيذي"
+    suggested: "خطوة موصى بمراجعتها"
+    why: "AR equivalent of 'enforcement action'."
+
+  # --- AR: confirmation framing ----------------------------------------
+
+  - phrase: "مخالفة\s+مثبتة"
+    suggested: "نمط مرصود قيد المراجعة"
+    why: "AR equivalent of 'proven / confirmed violation'."
+
+  - phrase: "غير\s+ممتثل\s+بشكل\s+مؤكد"
+    suggested: "أثر مُشار إليه؛ يوصى بالمراجعة"
+    why: "AR equivalent of 'confirmed non-compliant'."

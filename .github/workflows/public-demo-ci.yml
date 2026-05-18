@@ -1,0 +1,156 @@
+# Public Demo CI · type-check + build + lint + forbidden-claim scan +
+# secret scan + private-folder scan. Runs on every push and PR.
+# Uses only GitHub-hosted ubuntu-latest runners. Requires no secrets.
+# A domain-restricted MapTiler key is OPTIONAL; the build falls back
+# to a stable in-component message when the key is absent.
+
+name: public-demo-ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: public-demo-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  banned-claims:
+    name: Banned-claims linter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run banned-claims linter
+        run: python3 tools/lint_banned_claims.py
+
+  frontend-typecheck:
+    name: Frontend type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install pinned frontend deps
+        working-directory: frontend
+        run: npm ci
+      - name: Type-check
+        working-directory: frontend
+        run: npm run type-check
+
+  frontend-build:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install pinned frontend deps
+        working-directory: frontend
+        run: npm ci
+      - name: Build
+        working-directory: frontend
+        env:
+          # Optional · domain-restricted public-demo key only.
+          # If unset, the build still succeeds with an in-component fallback.
+          NEXT_PUBLIC_MAPTILER_KEY: ${{ secrets.PUBLIC_DEMO_MAPTILER_KEY }}
+        run: npm run build
+
+  exposure-guard:
+    name: Exposure guard · secret / vendor / private-folder scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Confirm no private folders were exported
+        run: |
+          FAIL=0
+          for p in \
+              docs/phase_log.md \
+              docs/strategy \
+              docs/governance \
+              docs/launch \
+              docs/product \
+              docs/ops \
+              udi-os-v2/reports \
+              backend \
+              frontend/app/legacy/kuwait-reference \
+              data/cases/URB-KW-SURRA-0001 \
+              frontend/public/demo-assets/kw-surra-evidence-pack \
+              frontend/public/demo-assets/v2-institutional-story \
+              CLAUDE.md \
+              .env \
+              .env.local
+          do
+            if [ -e "$p" ]; then
+              echo "::error::Private path leaked into public demo: $p"
+              FAIL=1
+            fi
+          done
+          if [ "$FAIL" = "1" ]; then exit 1; fi
+          echo "All private paths confirmed absent."
+
+      - name: Secret-pattern scan
+        run: |
+          set +e
+          # Find token / key literal patterns anywhere in tracked sources.
+          # Note: pattern intentionally targets LITERAL VALUES (long alphanumeric
+          # secrets) rather than the bare name of a config variable.
+          MATCHES=$(grep -RInE \
+            "ghp_[A-Za-z0-9]{20,}|gho_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|sk-[A-Za-z0-9]{20,}|-----BEGIN[ A-Z]+PRIVATE KEY-----|NEXT_PUBLIC_MAPTILER_KEY[[:space:]]*=[[:space:]]*['\"]?[A-Za-z0-9]{16,}|API_KEY[[:space:]]*=[[:space:]]*['\"]?[A-Za-z0-9]{16,}|TOKEN[[:space:]]*=[[:space:]]*['\"]?[A-Za-z0-9]{16,}|SECRET[[:space:]]*=[[:space:]]*['\"]?[A-Za-z0-9]{16,}|password[[:space:]]*=[[:space:]]*['\"]?[A-Za-z0-9]{6,}" \
+            --include='*.ts' --include='*.tsx' --include='*.js' --include='*.json' --include='*.md' --include='*.yml' --include='*.yaml' --include='*.py' \
+            --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=.git \
+            .)
+          if [ -n "$MATCHES" ]; then
+            echo "::error::Secret-like literal value detected:"
+            echo "$MATCHES"
+            exit 1
+          fi
+          echo "Secret scan clean."
+
+      - name: Vendor active-integration scan
+        run: |
+          set +e
+          # Reject phrases that imply ACTIVE vendor integrations in any visible
+          # TypeScript / TSX / JS / MD content. Comments inside source are
+          # also scanned because public source-readers see them too.
+          MATCHES=$(grep -RInE \
+            "active (Google Cloud|AWS|Azure|STC Cloud|G42|Oracle|Palantir|CARTO|Maxar|UrbanLogiq|Esri) integration|live integration with (Google Cloud|AWS|Azure|STC Cloud|G42|Oracle|Palantir|CARTO|Maxar|UrbanLogiq|Esri)" \
+            --include='*.ts' --include='*.tsx' --include='*.js' --include='*.json' --include='*.md' \
+            --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=.git \
+            .)
+          if [ -n "$MATCHES" ]; then
+            echo "::error::Vendor active-integration claim detected:"
+            echo "$MATCHES"
+            exit 1
+          fi
+          echo "Vendor active-integration scan clean."
+
+      - name: Forbidden-claim phrase scan
+        run: |
+          set +e
+          # Catch high-risk active-claim phrasing that would slip past the
+          # main banned-claims linter (e.g. multi-word claim phrases that
+          # only make sense in user-facing context). Each pattern uses a
+          # word-boundary or sentence-context check via grep -E.
+          MATCHES=$(grep -RInE \
+            "official municipal integration|official GIS\b|official boundary\b|production deployment\b|live data feed\b|live monitoring\b|real-time monitoring\b|guaranteed ROI\b|investment recommendation\b|automated decisioning\b|active cloud integration\b" \
+            --include='*.ts' --include='*.tsx' --include='*.js' --include='*.json' --include='*.md' \
+            --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=.git \
+            . \
+            | grep -vE "[Nn]o |[Nn]ot |without |never |[Aa]nti-|not an active|no active" )
+          if [ -n "$MATCHES" ]; then
+            echo "::error::Active forbidden-claim phrase (not negated):"
+            echo "$MATCHES"
+            exit 1
+          fi
+          echo "Forbidden-claim active-phrase scan clean."

@@ -1,0 +1,307 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+
+  /* IR-25H — V2 Dark Institutional Grammar tokens.
+     Charcoal-black shell + deep-navy surfaces + slate-navy panels
+     + muted-gold accent + warm off-white text + cool gray-blue
+     secondary. Used by the V2 default homepage chrome and the
+     V2 cinematic components. V1 surfaces continue to use the
+     existing paper / panel / ink ladder per CLAUDE.md §7. */
+  --v2-shell: #06080D;
+  --v2-shell-soft: #070B12;
+  --v2-surface: #08111F;
+  --v2-surface-2: #0A1324;
+  --v2-panel: #0D1728;
+  --v2-panel-2: #101C2F;
+  --v2-border: rgba(120, 138, 166, 0.20);
+  --v2-border-strong: rgba(183, 138, 59, 0.42);
+  --v2-text: #F5F2E8;
+  --v2-text-soft: #E1E5EC;
+  --v2-text-muted: #B5BFCE;
+  --v2-text-faint: #8C97A8;
+  --v2-gold: #B78A3B;
+  --v2-gold-soft: #C79A49;
+  --v2-gold-faint: rgba(183, 138, 59, 0.18);
+
+  /* IR-26A — canonical V2 page-shell tokens.
+     These are the authoritative names used by the V2 default
+     homepage shell ('/'). They sit alongside the IR-25H tokens
+     (which V2 components continue to consume); IR-26A tokens are
+     for the page-shell layer only. V1 / legacy / enterprise
+     routes do not consume these values; they keep the existing
+     paper / ink ladder per CLAUDE.md §7. */
+  --bg-page: #03050A;
+  --bg-deep: #07101D;
+  --bg-surface: #0B1728;
+  --bg-surface-soft: #0E1C2F;
+  --border-subtle: rgba(200, 169, 107, 0.18);
+  --text-primary: #F5F1E8;
+  --text-secondary: #AAB4C3;
+  --accent-gold: #C8A96B;
+  --accent-gold-soft: rgba(200, 169, 107, 0.14);
+}
+
+html, body {
+  background: #F4F5F2;
+  color: #0A0F1F;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* IR-25H — V2 Dark Institutional Grammar utility classes.
+   Named to avoid colliding with the existing V1 token system. */
+.v2-shell-bg          { background: var(--v2-shell); color: var(--v2-text); }
+.v2-shell-soft-bg     { background: var(--v2-shell-soft); color: var(--v2-text); }
+.v2-surface-bg        { background: var(--v2-surface); color: var(--v2-text); }
+.v2-surface-2-bg      { background: var(--v2-surface-2); color: var(--v2-text); }
+.v2-panel-bg          { background: var(--v2-panel); color: var(--v2-text); }
+.v2-panel-2-bg        { background: var(--v2-panel-2); color: var(--v2-text); }
+.v2-border-line       { border-color: var(--v2-border); }
+.v2-border-strong     { border-color: var(--v2-border-strong); }
+.v2-text-strong       { color: var(--v2-text); }
+.v2-text-soft         { color: var(--v2-text-soft); }
+.v2-text-muted        { color: var(--v2-text-muted); }
+.v2-text-faint        { color: var(--v2-text-faint); }
+.v2-gold              { color: var(--v2-gold); }
+.v2-gold-soft         { color: var(--v2-gold-soft); }
+.v2-gold-faint-bg     { background: var(--v2-gold-faint); }
+
+/* IR-26A — V2 page-shell utility classes.
+   .v2-page-shell owns the background; .v2-page-section is a
+   transparent (or dark-surface continuation) row at full width;
+   .v2-page-inner caps content width for readability only.
+   The shell + section + inner pattern enforces the strict
+   2-layer page grammar from the IR-26A brief: the page shell
+   owns the background, the inner container owns layout width. */
+.v2-page-shell {
+  width: 100%;
+  min-height: 100vh;
+  /* Subtle radial film over the deep navy floor. No new asset;
+     pure CSS gradient. Kept low-contrast and institutional. */
+  background:
+    radial-gradient(
+      ellipse 1200px 800px at 50% 0%,
+      var(--bg-deep) 0%,
+      var(--bg-page) 70%,
+      var(--bg-page) 100%
+    ),
+    var(--bg-page);
+  color: var(--text-primary);
+}
+/* V2 Visual Readability Stabilization — make every V2 page surface render
+   on its intended deep-navy backdrop, full-bleed across the viewport so
+   the off-white V1/legacy body never bleeds through under V2 content.
+   Uses the standard box-shadow + clip-path full-bleed trick to extend
+   the dark surface beyond any constrained <main> wrapper without
+   touching the layout shell. */
+.v2-page-section {
+  width: 100%;
+  position: relative;
+  background: var(--bg-page);
+  color: var(--v2-text);
+  box-shadow: 0 0 0 100vw var(--bg-page);
+  clip-path: inset(0 -100vw);
+}
+.v2-page-section.is-deep    { background: var(--bg-deep);    box-shadow: 0 0 0 100vw var(--bg-deep); }
+.v2-page-section.is-surface { background: var(--bg-surface); box-shadow: 0 0 0 100vw var(--bg-surface); }
+.v2-page-inner {
+  margin-inline: auto;
+  max-width: 1280px;
+  padding-inline: 1.5rem;
+}
+@media (min-width: 1024px) {
+  .v2-page-inner { padding-inline: 2.5rem; }
+}
+
+/* Institutional, restrained — no motion by default */
+* {
+  transition-property: background-color, border-color, color;
+  transition-duration: 120ms;
+}
+
+/* Phase 23 — focused-marker pulse on the geo command map.
+   Soft, slow, no opacity change on the marker body itself —
+   only the outer halo breathes, so the dot stays legible. */
+@keyframes gcc-marker-pulse {
+  0%   { box-shadow: 0 0 0 0   rgba(10, 15, 31, 0.45), 0 1px 4px rgba(0, 0, 0, 0.45); }
+  70%  { box-shadow: 0 0 0 14px rgba(10, 15, 31, 0.00), 0 1px 4px rgba(0, 0, 0, 0.45); }
+  100% { box-shadow: 0 0 0 0   rgba(10, 15, 31, 0.00), 0 1px 4px rgba(0, 0, 0, 0.45); }
+}
+.gcc-marker-pulse {
+  animation: gcc-marker-pulse 2200ms ease-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gcc-marker-pulse { animation: none; }
+}
+
+/* Phase 26 — Cinematic intelligence layer.
+   Three subtle one-shot animations used as content/state transitions.
+   All are short (<500ms) and transform-only to keep the page calm.
+   Honour prefers-reduced-motion. */
+
+/* Content enter — used when story step changes; the narrative card
+   on the rail gets remounted under a new key so the keyframe re-fires. */
+@keyframes gcc-content-enter {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.gcc-content-enter {
+  animation: gcc-content-enter 280ms ease-out both;
+}
+
+/* Decision moment — used when the story reaches the Decision step.
+   A faint scale pulse + opacity ramp draws the eye to the drawer status. */
+@keyframes gcc-decision-emphasize {
+  0%   { opacity: 0;   transform: scale(0.985); }
+  60%  { opacity: 1;   transform: scale(1.012); }
+  100% { opacity: 1;   transform: scale(1); }
+}
+.gcc-decision-emphasize {
+  animation: gcc-decision-emphasize 480ms ease-out both;
+}
+
+/* Action flash — fired once on intent-button click. A short outward
+   ink halo confirms the click was registered without changing layout. */
+@keyframes gcc-action-flash {
+  0%   { box-shadow: 0 0 0 0   rgba(10, 15, 31, 0.45); }
+  100% { box-shadow: 0 0 0 10px rgba(10, 15, 31, 0.00); }
+}
+.gcc-action-flash {
+  animation: gcc-action-flash 600ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gcc-content-enter,
+  .gcc-decision-emphasize,
+  .gcc-action-flash {
+    animation: none;
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────
+   Cinematic motion MVP layer — used by the homepage intro only.
+   All keyframes are transform/opacity-only and respect
+   prefers-reduced-motion. Durations are calm and institutional —
+   no aggressive pulsing or scanline.
+   ──────────────────────────────────────────────────────────────── */
+
+/* Soft node pulse — used on macro city anchors. Very subtle. */
+@keyframes gcc-soft-pulse {
+  0%   { opacity: 0.85; transform: scale(1); }
+  50%  { opacity: 1;    transform: scale(1.06); }
+  100% { opacity: 0.85; transform: scale(1); }
+}
+.gcc-soft-pulse {
+  animation: gcc-soft-pulse 4200ms ease-in-out infinite;
+  transform-origin: center;
+}
+
+/* Title blur-to-sharp — calm cinematic reveal. */
+@keyframes gcc-title-blur-in {
+  0%   { opacity: 0; filter: blur(14px); transform: translateY(8px); }
+  60%  { opacity: 1; }
+  100% { opacity: 1; filter: blur(0); transform: translateY(0); }
+}
+.gcc-title-blur-in {
+  animation: gcc-title-blur-in 1600ms cubic-bezier(0.22, 0.72, 0.23, 1) both;
+}
+
+/* Subtle chrome reveal — used by demo chip / skip / toggle. */
+@keyframes gcc-chrome-reveal {
+  0%   { opacity: 0; transform: translateY(-6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.gcc-chrome-reveal {
+  animation: gcc-chrome-reveal 700ms cubic-bezier(0.22, 0.72, 0.23, 1) both;
+}
+
+/* Bottom dock slide-up. */
+@keyframes gcc-dock-rise {
+  0%   { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.gcc-dock-rise {
+  animation: gcc-dock-rise 900ms cubic-bezier(0.22, 0.72, 0.23, 1) both;
+}
+
+/* Side panel slide-in (left). */
+@keyframes gcc-panel-slide-in-left {
+  0%   { opacity: 0; transform: translateX(-12px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+.gcc-panel-slide-in-left {
+  animation: gcc-panel-slide-in-left 700ms cubic-bezier(0.22, 0.72, 0.23, 1) both;
+}
+
+/* Side panel slide-in (right). */
+@keyframes gcc-panel-slide-in-right {
+  0%   { opacity: 0; transform: translateX(12px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+.gcc-panel-slide-in-right {
+  animation: gcc-panel-slide-in-right 700ms cubic-bezier(0.22, 0.72, 0.23, 1) both;
+}
+
+/* Concentric ring expand — for Surra surface rings. */
+@keyframes gcc-ring-expand {
+  0%   { opacity: 0; transform: scale(0.4); }
+  60%  { opacity: 1; }
+  100% { opacity: 1; transform: scale(1); }
+}
+.gcc-ring-expand {
+  animation: gcc-ring-expand 1400ms cubic-bezier(0.22, 0.72, 0.23, 1) both;
+  transform-origin: center;
+}
+
+/* Chip pop — for KW-007 / ev-002 evidence chips. */
+@keyframes gcc-chip-pop {
+  0%   { opacity: 0; transform: scale(0.7) translateY(2px); }
+  60%  { opacity: 1; transform: scale(1.04) translateY(0); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.gcc-chip-pop {
+  animation: gcc-chip-pop 480ms cubic-bezier(0.22, 0.72, 0.23, 1) both;
+  transform-origin: center;
+}
+
+/* Final glow sweep — horizontal gradient that translates across the
+   stage at the operational-value moment. */
+@keyframes gcc-glow-sweep {
+  0%   { opacity: 0; transform: translateX(-30%); }
+  20%  { opacity: 0.4; }
+  80%  { opacity: 0.4; }
+  100% { opacity: 0; transform: translateX(130%); }
+}
+.gcc-glow-sweep {
+  animation: gcc-glow-sweep 2400ms cubic-bezier(0.22, 0.72, 0.23, 1) both;
+}
+
+/* Subtle particle drift — small floaters in the regional field. */
+@keyframes gcc-drift {
+  0%   { transform: translate(0, 0); opacity: 0.55; }
+  50%  { transform: translate(2px, -6px); opacity: 0.85; }
+  100% { transform: translate(0, 0); opacity: 0.55; }
+}
+.gcc-drift {
+  animation: gcc-drift 9s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gcc-soft-pulse,
+  .gcc-title-blur-in,
+  .gcc-chrome-reveal,
+  .gcc-dock-rise,
+  .gcc-panel-slide-in-left,
+  .gcc-panel-slide-in-right,
+  .gcc-ring-expand,
+  .gcc-chip-pop,
+  .gcc-glow-sweep,
+  .gcc-drift {
+    animation: none;
+  }
+}
