@@ -135,22 +135,16 @@ jobs:
           fi
           echo "Vendor active-integration scan clean."
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Forbidden-claim phrase scan
         run: |
-          set +e
-          # Catch high-risk active-claim phrasing that would slip past the
-          # main banned-claims linter (e.g. multi-word claim phrases that
-          # only make sense in user-facing context). Each pattern uses a
-          # word-boundary or sentence-context check via grep -E.
-          MATCHES=$(grep -RInE \
-            "official municipal integration|official GIS\b|official boundary\b|production deployment\b|live data feed\b|live monitoring\b|real-time monitoring\b|guaranteed ROI\b|investment recommendation\b|automated decisioning\b|active cloud integration\b" \
-            --include='*.ts' --include='*.tsx' --include='*.js' --include='*.json' --include='*.md' \
-            --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=.git \
-            . \
-            | grep -vE "[Nn]o |[Nn]ot |without |never |[Aa]nti-|not an active|no active" )
-          if [ -n "$MATCHES" ]; then
-            echo "::error::Active forbidden-claim phrase (not negated):"
-            echo "$MATCHES"
-            exit 1
-          fi
-          echo "Forbidden-claim active-phrase scan clean."
+          # Governance-aware forbidden-claim phrase scan. Same patterns
+          # as the prior inline grep, with three explicit exclusions
+          # (whole-file allow-list for constitutional enumeration
+          # documents, multi-line blocked_use / forbiddenUse array
+          # bodies, richer negation-context detection). The script
+          # prints an exclusion log so every skip is auditable.
+          python3 tools/exposure_guard_forbidden_phrases.py
